@@ -1,0 +1,25 @@
+{
+  "extends": "@tenexim/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": [
+        "./src/*",
+        "./hooks/*"
+      ]
+    },
+    "jsx": "preserve"
+  },
+  "include": [
+    "tailwind.config.ts",
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

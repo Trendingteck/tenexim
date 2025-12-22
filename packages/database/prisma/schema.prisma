@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+// --- USER & AUTH MODELS ---
+
+enum Role {
+  USER
+  ADMIN
+  ENTERPRISE
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(USER)
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  chatSessions  ChatSession[]
+
+  @@index([email])
+}
+
+model ChatSession {
+  id        String        @id @default(uuid())
+  title     String
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPinned  Boolean       @default(false)
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String      // 'user' or 'assistant'
+  content   String      @db.Text
+  files     Json?       // To store array of file metadata (name, type, url/content)
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId])
+}
+
+// --- SHIPMENT INTELLIGENCE MODELS ---
+
+model Shipment {
+  id            String    @id @default(uuid())
+
+  // 1. Logistics & Documentation
+  indianPort    String    @map("indian_port")
+  beType        String?   @map("be_type")        // BE_TYPE
+  boeNumber     String?   @map("boe_number")     // BOE_NUMBER
+  boeDate       DateTime  @map("boe_date")       // BOE_DATE
+
+  // 2. HS Codes (RITC)
+  ritc2         String?   @map("ritc_2")         // RITC_2 (Added explicit map for clarity)
+  ritc4         String?   @map("ritc_4")         // RITC_4 (Added explicit map for clarity)
+  hsCode        String    @map("ritc_8")         // RITC_8
+
+  // 3. Product & Quantity
+  productDesc   String    @map("item_description") // ITEM_DESCRIPTION
+  quantity      Float     @map("qty")            // QTY (Added explicit map)
+  unit          String    // UNIT
+
+  // 4. Values & Currency (All 7 valuation columns are now included)
+  unitValueFc   Float     @map("unit_value_fc")  // UNIT_VALUE_FC <--- MISSING, NOW ADDED
+  currency      String    @map("invoice_currency") // INVOICE_CURRENCY
+  totalValueFc  Float     @map("total_value_fc") // TOTAL_VALUE_FC <--- MISSING, NOW ADDED
+  unitValueUsd  Float     @map("unit_value_usd")  // UNIT_VALUE_USD
+  totalValueUsd Float     @map("total_value_usd") // TOTAL_VALUE_USD
+  unitValueInr  Float     @map("unit_value_inr")  // UNIT_VALUE_INR <--- MISSING, NOW ADDED
+  totalValueInr Float     @map("total_value_inr") // TOTAL_VALUE_INR
+  duty          Float?    // DUTY
+
+  // 5. Importer Details
+  importerName      String    @map("importer")            // IMPORTER
+  importerAddress   String?   @map("importer_address")    // IMPORTER_ADDRESS
+  importerCityState String?   @map("city_state")          // CITY_STATE (Renamed for clarity)
+  importerPin       String?   @map("pin_code")            // PIN_CODE
+  importerPhone     String?   @map("importer_phone")      // IMPORTER_PHONE
+  importerEmail     String?   @map("importer_email")      // IMPORTER_EMAIL
+
+  // 6. Supplier & Foreign Details
+  supplierName      String    @map("supplier")            // SUPPLIER
+  supplierAddress   String?   @map("supplier_address")    // SUPPLIER_ADDRESS
+  foreignPort       String?   @map("foreign_port")        // FOREIGN PORT
+  originCountry     String    @map("origin_country")      // ORIGIN_COUNTRY
+
+  createdAt DateTime @default(now())
+
+  // INDEXES FOR HIGH PERFORMANCE SEARCH
+  @@index([hsCode])
+  @@index([importerName])
+  @@index([supplierName])
+  @@index([productDesc])
+  @@index([boeDate])
+  @@index([originCountry])
+}

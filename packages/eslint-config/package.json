@@ -1,0 +1,17 @@
+{
+    "name": "@tenexim/eslint-config",
+    "version": "0.0.0",
+    "private": true,
+    "license": "MIT",
+    "exports": {
+        "./nextjs": "./nextjs.js"
+    },
+    "dependencies": {
+        "@typescript-eslint/eslint-plugin": "latest",
+        "@typescript-eslint/parser": "latest",
+        "eslint-config-next": "latest",
+        "eslint-config-prettier": "latest",
+        "eslint-config-turbo": "latest",
+        "eslint-plugin-only-warn": "latest"
+    }
+}

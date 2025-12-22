@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@tenexim/ui": [
+        "./packages/ui/index.ts"
+      ],
+      "@tenexim/typescript-config/*": [
+        "./packages/typescript-config/*"
+      ],
+      "@tenexim/eslint-config/*": [
+        "./packages/eslint-config/*"
+      ],
+      "@tenexim/tailwind-config": [
+        "./packages/tailwind-config/index.ts"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
