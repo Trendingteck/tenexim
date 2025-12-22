@@ -49,7 +49,9 @@ export function useCopilot() {
       // Cache sessions for instant load next time
       try {
         sessionStorage.setItem(SESSIONS_CACHE_KEY, JSON.stringify(res.sessions));
-      } catch { }
+      } catch (e) {
+        // Ignore cache errors in private browsing
+      }
     }
   }, []);
 
@@ -65,7 +67,9 @@ export function useCopilot() {
         if (cachedSessions) {
           setSessions(JSON.parse(cachedSessions));
         }
-      } catch { }
+      } catch (e) {
+        // Ignore cache errors
+      }
 
       const savedSessionId = localStorage.getItem(SESSION_STORAGE_KEY);
       if (savedSessionId) {
@@ -85,7 +89,9 @@ export function useCopilot() {
         // Update cache
         try {
           sessionStorage.setItem(SESSIONS_CACHE_KEY, JSON.stringify(sessionsRes.sessions));
-        } catch { }
+        } catch (e) {
+          // Ignore cache errors
+        }
       }
 
       if (savedSessionId && messagesRes?.success && messagesRes.messages) {
@@ -259,9 +265,13 @@ export function useCopilot() {
       const decoder = new TextDecoder();
       let accumulatedContent = '';
 
-      while (true) {
+      let isDone = false;
+      while (!isDone) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          isDone = true;
+          break;
+        }
 
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split('\n');

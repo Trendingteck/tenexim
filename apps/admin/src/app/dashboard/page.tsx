@@ -6,13 +6,11 @@ import {
     Upload,
     FileSpreadsheet,
     CheckCircle2,
-    AlertCircle,
     Loader2,
     Database,
     ShieldCheck,
     TrendingUp,
     Users as UsersIcon,
-    Search,
     ArrowRight
 } from 'lucide-react';
 import { Button } from '@tenexim/ui';

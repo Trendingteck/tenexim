@@ -1,10 +1,8 @@
 import * as React from 'react';
 import {
   ShieldCheck,
-  BarChart2,
   Settings,
   Database,
-  Bell,
   User,
   LayoutDashboard,
   Users2,

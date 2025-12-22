@@ -34,7 +34,24 @@ module.exports = {
         ".*.js",
         "node_modules/",
     ],
+    plugins: ["@typescript-eslint", "only-warn"],
     rules: {
         "import/no-default-export": "off",
+        "no-unused-vars": [
+            "warn",
+            {
+                argsIgnorePattern: "^_",
+                varsIgnorePattern: "^_",
+                caughtErrorsIgnorePattern: "^_",
+            },
+        ],
+        "@typescript-eslint/no-unused-vars": [
+            "warn",
+            {
+                argsIgnorePattern: "^_",
+                varsIgnorePattern: "^_",
+                caughtErrorsIgnorePattern: "^_",
+            },
+        ],
     },
 };

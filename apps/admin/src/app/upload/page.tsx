@@ -6,10 +6,8 @@ import {
     Upload,
     FileText,
     CheckCircle2,
-    AlertCircle,
     Loader2,
     ArrowRight,
-    Search,
     Database,
     ShieldCheck,
     BarChart3
@@ -21,13 +19,7 @@ import {
     CardHeader,
     CardTitle,
     CardDescription,
-    Badge,
-    Table,
-    TableHeader,
-    TableBody,
-    TableHead,
-    TableRow,
-    TableCell
+    Badge
 } from '@tenexim/ui';
 
 export default function AdminUploadPage() {
