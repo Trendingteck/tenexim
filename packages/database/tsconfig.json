@@ -1,10 +1,12 @@
 ﻿{
+  "extends": "../configs/tsconfig/base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "skipLibCheck": true
-  }
+    "baseUrl": ".",
+    "paths": {
+      "@tenexim/auth": ["../auth/src"],
+      "@tenexim/auth/*": ["../auth/src/*"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "scripts/**/*"]
 }

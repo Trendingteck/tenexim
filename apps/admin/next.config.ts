@@ -5,9 +5,6 @@ const nextConfig: NextConfig = {
     "@tenexim/ui",
     "@tenexim/tailwind-config"
   ],
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
 
 export default nextConfig;

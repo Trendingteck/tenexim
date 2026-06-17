@@ -1,0 +1,10 @@
+procs:
+  Web Client:
+    shell: "pnpm --filter web dev"
+  Admin Panel:
+    shell: "pnpm --filter admin dev"
+  Prisma Studio:
+    shell: "pnpm --filter @tenexim/database db:studio"
+  # API (Placeholder - uncomment if you create apps/api)
+  # API Server:
+  #   shell: "pnpm --filter api dev"

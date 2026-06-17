@@ -16,24 +16,17 @@ import {
     Pencil,
     Trash,
     Pin,
-    AlertTriangle
+    AlertTriangle,
+    Loader2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import WelcomeScreen from '@/app/components/copilot/WelcomeScreen';
-import MessageItem from '@/app/components/copilot/MessageItem';
-import ChatInput from '@/app/components/copilot/ChatInput';
-import { useCopilot, Message } from '@/hooks/useCopilot';
+import WelcomeScreen from '@/components/copilot/WelcomeScreen';
+import MessageItem from '@/components/copilot/MessageItem';
+import ChatInput from '@/components/copilot/ChatInput';
+import FileViewerPanel from '@/components/copilot/FileViewerPanel';
+import ImageLightbox from '@/components/copilot/ImageLightbox';
+import { useCopilot, Message } from '@/hooks/copilot/useCopilot';
 import { Button } from '@tenexim/ui';
-
-const CHAT_HISTORY = [
-    { id: '1', title: 'CBSE Curriculum: New NCF and Rationalised NCERT', date: 'Nov 29', month: 'November' },
-    { id: '2', title: 'Transforming a Basic Resume into a Standout Professional Document', date: 'Jul 20', month: 'July' },
-    { id: '3', title: 'Web Automation Tools Comparison', date: 'Apr 28', month: 'April' },
-    { id: '4', title: 'Advanced Web Automation Tasks for PC Agent', date: 'Apr 26', month: 'April' },
-    { id: '5', title: 'Analyzing PCAgent Workflow and Code Issues', date: 'Apr 9', month: 'April' },
-    { id: '6', title: 'Innovative SaaS Solutions for Emerging Tech', date: 'Mar 31', month: 'March' },
-    { id: '7', title: 'FireCrawl API for AI Research', date: 'Mar 15', month: 'March' },
-];
 
 export default function CopilotPage() {
     const {
@@ -48,7 +41,10 @@ export default function CopilotPage() {
         createNewChat,
         removeSession,
         renameSession,
-        pinSession
+        pinSession,
+        isLoadingMessages,
+        activeFile,
+        setActiveFile
     } = useCopilot();
 
     const [inputValue, setInputValue] = useState('');
@@ -68,7 +64,7 @@ export default function CopilotPage() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, isThinking]);
+    }, [messages, isThinking, streamingContent]);
 
     const handleNewChat = () => {
         createNewChat();
@@ -110,8 +106,20 @@ export default function CopilotPage() {
         setShowClearConfirm(false);
     };
 
+    // Image Detection Logic
+    const isActiveFileImage = activeFile && (
+        (activeFile instanceof File && activeFile.type.startsWith('image/')) ||
+        (activeFile.type && activeFile.type.startsWith('image/')) ||
+        (activeFile.base64 !== undefined)
+    );
+
     return (
         <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-950 flex animate-in fade-in duration-300 overflow-hidden">
+
+            {/* LIGHTBOX OVERLAY FOR IMAGES */}
+            {isActiveFileImage && (
+                <ImageLightbox file={activeFile} onClose={() => setActiveFile(null)} />
+            )}
 
             {/* Clear Chat Confirmation Modal */}
             {showClearConfirm && (
@@ -161,7 +169,7 @@ export default function CopilotPage() {
             {/* COLLAPSIBLE SIDEPANEL */}
             <aside
                 className={`
-                    flex flex-col h-full bg-slate-950 border-r border-slate-800 transition-all duration-300 ease-in-out relative group/sidebar
+                    flex flex-col h-full bg-slate-950 border-r border-slate-800 transition-all duration-300 ease-in-out relative group/sidebar shrink-0
                     ${sidepanelOpen ? 'w-[300px]' : 'w-16 cursor-w-resize'}
                 `}
                 onClick={() => !sidepanelOpen && setSidepanelOpen(true)}
@@ -177,7 +185,7 @@ export default function CopilotPage() {
                     {sidepanelOpen && (
                         <button
                             onClick={(e) => { e.stopPropagation(); setSidepanelOpen(false); }}
-                            className="p-1 text-slate-500 hover:text-white transition-colors"
+                            className="p-1 text-slate-500 hover:text-white transition-colors cursor-pointer"
                         >
                             <ChevronsLeft className="w-4 h-4" />
                         </button>
@@ -203,14 +211,14 @@ export default function CopilotPage() {
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 onClick={handleNewChat}
-                                className="flex items-center justify-center gap-2 h-9 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-bold text-[11px] uppercase tracking-wider transition-all shadow-lg shadow-amber-600/10"
+                                className="flex items-center justify-center gap-2 h-9 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-bold text-[11px] uppercase tracking-wider transition-all shadow-lg shadow-amber-600/10 cursor-pointer"
                             >
                                 <MessageSquarePlus className="w-3.5 h-3.5" />
                                 New
                             </button>
                             <button
                                 onClick={handleClearChat}
-                                className="flex items-center justify-center gap-2 h-9 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-md font-bold text-[11px] uppercase tracking-wider transition-all border border-slate-800"
+                                className="flex items-center justify-center gap-2 h-9 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-md font-bold text-[11px] uppercase tracking-wider transition-all border border-slate-800 cursor-pointer"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 Clear
@@ -238,7 +246,7 @@ export default function CopilotPage() {
                                                     <button
                                                         onClick={() => selectSession(item.id)}
                                                         className={`
-                                                            w-full text-left py-1.5 px-3 rounded-md transition-colors flex items-center justify-between
+                                                            w-full text-left py-1.5 px-3 rounded-md transition-colors flex items-center justify-between cursor-pointer
                                                             ${currentSessionId === item.id ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200'}
                                                             ${item.isPinned ? 'border-l-2 border-amber-500' : ''}
                                                         `}
@@ -257,7 +265,7 @@ export default function CopilotPage() {
                                                             e.stopPropagation();
                                                             setActiveMenuId(activeMenuId === item.id ? null : item.id);
                                                         }}
-                                                        className="p-1 hover:bg-slate-800 rounded-md text-slate-500 hover:text-white transition-colors"
+                                                        className="p-1 hover:bg-slate-800 rounded-md text-slate-500 hover:text-white transition-colors cursor-pointer"
                                                     >
                                                         <MoreHorizontal className="w-3.5 h-3.5" />
                                                     </button>
@@ -298,10 +306,10 @@ export default function CopilotPage() {
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col items-center py-6 space-y-6">
-                        <button onClick={handleNewChat} className="p-2 text-slate-500 hover:text-amber-500 transition-colors">
+                        <button onClick={handleNewChat} className="p-2 text-slate-500 hover:text-amber-500 transition-colors cursor-pointer">
                             <MessageSquarePlus className="w-5 h-5" />
                         </button>
-                        <button onClick={() => setSidepanelOpen(true)} className="p-2 text-slate-500 hover:text-white transition-colors">
+                        <button onClick={() => setSidepanelOpen(true)} className="p-2 text-slate-500 hover:text-white transition-colors cursor-pointer">
                             <History className="w-5 h-5" />
                         </button>
                     </div>
@@ -312,104 +320,133 @@ export default function CopilotPage() {
                     {sidepanelOpen ? (
                         <div className="flex items-center justify-between p-2 bg-slate-900 rounded-md border border-slate-800">
                             <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-slate-800 overflow-hidden border border-slate-700" />
+                                <div className="w-7 h-7 rounded bg-slate-800 overflow-hidden border border-slate-700" />
                                 <div className="flex flex-col">
                                     <span className="text-[11px] font-bold text-white">Upgrade</span>
                                     <span className="text-[9px] text-slate-500">Free Tier</span>
                                 </div>
                             </div>
-                            <Button size="sm" variant="brand" className="h-6 px-3 rounded-full text-[9px]">Plan</Button>
+                            <Button size="sm" variant="brand" className="h-6 px-3 rounded-full text-[9px] cursor-pointer">Plan</Button>
                         </div>
                     ) : (
-                        <button onClick={() => setSidepanelOpen(true)} className="p-2 text-slate-500 hover:text-white transition-colors">
+                        <button onClick={() => setSidepanelOpen(true)} className="p-2 text-slate-500 hover:text-white transition-colors cursor-pointer">
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     )}
                 </div>
             </aside>
 
-            {/* MAIN CONTENT AREA */}
-            <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-slate-950">
-                {/* LAB HEADER */}
-                <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-6">
-                        <button
-                            onClick={() => router.push('/dashboard/overview')}
-                            className="p-2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-2 font-black text-[9px] uppercase tracking-widest"
-                        >
-                            <ChevronLeft className="w-3.5 h-3.5" />
-                            Exit Lab
-                        </button>
-                        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="w-3 h-3 text-amber-500" />
-                                <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Global Intelligence Workspace</span>
-                            </div>
-                            <h1 className="text-sm font-black text-slate-900 dark:text-white leading-tight uppercase font-display">
-                                {messages.length > 0 ? 'Analysis Active' : 'New Investigation'}
-                            </h1>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700">
-                            <Zap className="w-3 h-3 text-amber-500" />
-                            <span className="text-[9px] font-black text-slate-600 dark:text-slate-400">Tokens: 4.8k</span>
-                        </div>
-                    </div>
-                </header>
-
-                <main className="flex-1 flex flex-col relative overflow-hidden">
-                    {/* Visual Background Accent */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none opacity-40"></div>
-
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pt-10 pb-40">
-                        <div className="max-w-4xl mx-auto w-full px-8">
-                            {messages.length === 0 ? (
-                                <WelcomeScreen onSuggestionClick={(text: string) => setInputValue(text)} />
-                            ) : (
-                                <div className="space-y-10">
-                                    {messages.map((msg: Message, idx: number) => (
-                                        <MessageItem key={idx} role={msg.role} content={msg.content} files={msg.files} />
-                                    ))}
-
-                                    {/* Streaming Response */}
-                                    {streamingContent && (
-                                        <MessageItem role="model" content={streamingContent} isStreaming />
-                                    )}
-
-                                    {/* Minimal Thinking Indicator (shows before streaming starts) */}
-                                    {isThinking && !streamingContent && (
-                                        <div className="flex items-center gap-3 animate-in fade-in duration-200">
-                                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                                                <Sparkles className="w-4 h-4 text-amber-500" />
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce"></div>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div ref={messagesEndRef} />
+            {/* DUAL-PANE COHESIVE FLEX container */}
+            <div className="flex-1 flex min-w-0 bg-slate-50 dark:bg-slate-950">
+                
+                {/* CHAT THREAD WORKSPACE (LEFT) */}
+                <div className={`flex flex-col h-full bg-slate-50 dark:bg-slate-950 transition-all duration-300 min-w-0 ${activeFile && !isActiveFileImage ? 'w-[55%] border-r border-slate-200 dark:border-slate-800' : 'w-full'}`}>
+                    {/* LAB HEADER */}
+                    <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-6">
+                            <button
+                                onClick={() => router.push('/dashboard/overview')}
+                                className="p-2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-2 font-black text-[9px] uppercase tracking-widest cursor-pointer"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                Exit Lab
+                            </button>
+                            <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
+                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Global Intelligence Workspace</span>
                                 </div>
-                            )}
+                                <h1 className="text-sm font-black text-slate-900 dark:text-white leading-tight uppercase font-display">
+                                    {messages.length > 0 ? 'Analysis Active' : 'New Investigation'}
+                                </h1>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* IMMERSIVE FLOATING INPUT */}
-                    <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-slate-50 dark:from-slate-950 via-slate-50/90 dark:via-slate-950/90 to-transparent pointer-events-none">
-                        <div className="pointer-events-auto">
-                            <ChatInput
-                                onSend={sendMessage}
-                                isThinking={isThinking}
-                                inputValue={inputValue}
-                                setInputValue={setInputValue}
-                            />
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700">
+                                <Zap className="w-3 h-3 text-amber-500" />
+                                <span className="text-[9px] font-black text-slate-600 dark:text-slate-400">Tokens: 4.8k</span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="flex-1 flex flex-col relative overflow-hidden bg-slate-50/30 dark:bg-slate-950/20">
+                        {/* Visual Background Accent */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none opacity-40"></div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pt-10 pb-40">
+                            <div className={`mx-auto w-full px-8 transition-all duration-300 ${activeFile && !isActiveFileImage ? 'max-w-3xl' : 'max-w-4xl'}`}>
+                                {isLoadingMessages ? (
+                                    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                                        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                                        <p className="text-xs font-bold text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+                                            Syncing secure ledger...
+                                        </p>
+                                    </div>
+                                ) : messages.length === 0 ? (
+                                    <WelcomeScreen onSuggestionClick={(text: string) => setInputValue(text)} />
+                                ) : (
+                                    <div className="space-y-6">
+                                        {messages.map((msg: Message, idx: number) => (
+                                            <MessageItem 
+                                                key={idx} 
+                                                role={msg.role} 
+                                                content={msg.content} 
+                                                files={msg.files} 
+                                                onFileClick={setActiveFile}
+                                            />
+                                        ))}
+
+                                        {/* Streaming Response */}
+                                        {streamingContent && (
+                                            <MessageItem role="model" content={streamingContent} isStreaming />
+                                        )}
+
+                                        {/* Minimal Thinking Indicator */}
+                                        {isThinking && !streamingContent && (
+                                            <div className="flex items-center gap-3 animate-in fade-in duration-200">
+                                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                                                    <Sparkles className="w-4 h-4 text-amber-500" />
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce"></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* INPUT BOX - Properly spaced from the bottom edge */}
+                        <div className="absolute bottom-0 left-0 right-0 p-6 pb-5 bg-gradient-to-t from-slate-50 dark:from-slate-950 via-slate-50/90 dark:via-slate-950/90 to-transparent pointer-events-none">
+                            <div className="pointer-events-auto">
+                                <ChatInput
+                                    onSend={sendMessage}
+                                    isThinking={isThinking}
+                                    inputValue={inputValue}
+                                    setInputValue={setInputValue}
+                                    onDraftFileClick={setActiveFile}
+                                />
+                            </div>
                         </div>
                     </div>
-                </main>
+                </div>
+
+                {/* SPECIALIZED FILE AUDITING WORKSPACE (RIGHT SPLIT PANEL) - Only renders for documents/CSVs */}
+                {activeFile && !isActiveFileImage && (
+                    <div className="w-[45%] h-full shrink-0">
+                        <FileViewerPanel 
+                            file={activeFile} 
+                            onClose={() => setActiveFile(null)} 
+                        />
+                    </div>
+                )}
+
             </div>
         </div>
     );
@@ -420,7 +457,7 @@ function MenuButton({ icon, label, onClick, danger }: { icon: React.ReactNode, l
         <button
             onClick={(e) => { e.stopPropagation(); onClick(); }}
             className={`
-                w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-bold transition-colors
+                w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-bold transition-colors cursor-pointer
                 ${danger ? 'text-red-500 hover:bg-red-500/10' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}
             `}
         >
@@ -428,8 +465,4 @@ function MenuButton({ icon, label, onClick, danger }: { icon: React.ReactNode, l
             {label}
         </button>
     );
-}
-
-function Maximize2({ className }: { className?: string }) {
-    return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 3 6 6M9 21l-6-6M21 3v6h-6M3 21v-6h6M21 3l-9 9M3 21l9-9" /></svg>;
 }

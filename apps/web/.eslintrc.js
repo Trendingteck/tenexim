@@ -1,3 +1,3 @@
 module.exports = {
-    extends: ["@tenexim/eslint-config/nextjs"],
+    extends: ["@tenexim/configs/eslint/nextjs"],
 };

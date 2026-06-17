@@ -26,10 +26,11 @@
 }
 
 .dark {
-  --background: #020617;
+  /* Warm-toned premium charcoal grey scale */
+  --background: #18181c;
   --foreground: #f1f5f9;
-  --surface: #0f172a;
-  --surface-elevated: #1e293b;
+  --surface: #222227;
+  --surface-elevated: #2a2a30;
 
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: tenexim-clickhouse
+    ports:
+      - "8123:8123" # HTTP Port (Used by @clickhouse/client in Node.js)
+      - "9000:9000" # Native TCP Port
+    volumes:
+      - ch_data:/var/lib/clickhouse
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=your_secure_password
+      - CLICKHOUSE_DB=tenexim_analytics
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+volumes:
+  ch_data:

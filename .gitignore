@@ -1,4 +1,4 @@
-# Logs
+# Logs & Process Diagnostics
 logs
 *.log
 npm-debug.log*
@@ -6,32 +6,62 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+mprocs.log
 
-# Dependencies
-node_modules
-dist
-dist-ssr
+# Dependencies & Build Output
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.nyc_output/
+
+# Next.js Build Directories
+.next/
+out/
+build/
+
+# Turborepo Engine Cache
+.turbo/
 
 # Environment Variables (CRITICAL)
-.env
+# Ignore all actual env files
+*.env
+*.env.local
 .env*.local
-*.local
+# EXCEPT the blueprint example file required for onboarding
+!.env.example
 
-# Editor directories and files
+# Local Database & Docker Volume Outputs
+*.db
+*.db-journal
+*.sqlite
+clickhouse_data/
+
+# Deployment & Serverless Platforms
+.vercel
+.serverless/
+.sst/
+
+# TypeScript, ESLint & Prettier Compiler Caches
+*.tsbuildinfo
+.eslintcache
+.prettiercache
+
+# Editor & System Directories
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Next.js
-.next/
-out/
-build/
+# OS-Specific Garbage Files
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Turbo
-.turbo/
+# Private Local Script Files (TENEXIM Specific)
+watcher.py
+TENEXIM.txt

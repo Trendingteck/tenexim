@@ -17,16 +17,25 @@
     "baseUrl": ".",
     "paths": {
       "@tenexim/ui": [
-        "./packages/ui/index.ts"
+        "./packages/ui/src/index.ts"
       ],
-      "@tenexim/typescript-config/*": [
-        "./packages/typescript-config/*"
+      "@tenexim/database": [
+        "./packages/database/src/index.ts"
       ],
-      "@tenexim/eslint-config/*": [
-        "./packages/eslint-config/*"
+      "@tenexim/auth": [
+        "./packages/auth/src/index.ts"
       ],
-      "@tenexim/tailwind-config": [
-        "./packages/tailwind-config/index.ts"
+      "@tenexim/types": [
+        "./packages/types/src/index.ts"
+      ],
+      "@tenexim/ai": [
+        "./packages/ai/src/index.ts"
+      ],
+      "@tenexim/configs/*": [
+        "./packages/configs/*"
+      ],
+      "@tenexim/configs/tailwind": [
+        "./packages/configs/tailwind/index.ts"
       ]
     }
   },

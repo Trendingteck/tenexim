@@ -1,11 +1,15 @@
 {
-  "extends": "@tenexim/typescript-config/nextjs.json",
+  "extends": "@tenexim/configs/tsconfig/nextjs.json",
   "compilerOptions": {
     "moduleResolution": "node",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@tenexim/auth": ["../../packages/auth/src"],
+      "@tenexim/auth/*": ["../../packages/auth/*"],
+      "@tenexim/database": ["../../packages/database/src"],
+      "@tenexim/types": ["../../packages/types/src"],
+      "@tenexim/ai": ["../../packages/ai/src"],
+      "@tenexim/ui": ["../../packages/ui/src"],
+      "@/*": ["./src/*"]
     },
     "jsx": "preserve"
   },

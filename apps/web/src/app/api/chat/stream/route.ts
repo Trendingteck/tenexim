@@ -1,129 +1,81 @@
 import { NextRequest } from 'next/server';
-import { prisma, genAI, AI_MODEL, SYSTEM_INSTRUCTION, formatChatHistory } from '@/lib/chat';
-
-// =============================================================================
-// STREAMING CHAT API ROUTE
-// Handles real-time AI responses via Server-Sent Events
-// =============================================================================
+import { generateChatStream } from '@tenexim/ai';
+import { prisma } from '@tenexim/database';
 
 export async function POST(request: NextRequest) {
     try {
         const { sessionId, content, files = [] } = await request.json();
 
-        // Build file context with clear structure for the AI
-        let fileContext = "";
-        if (files.length > 0) {
-            fileContext = "\n\n---\n📎 **ATTACHED FILES:**\n";
-            for (const file of files) {
-                const sizeKB = file.size ? Math.round(file.size / 1024) : 'unknown';
-                fileContext += `\n**File: ${file.name}** (${file.type || 'unknown type'}, ${sizeKB}KB)\n`;
-
-                if (file.extractedText) {
-                    // Limit text to prevent token overflow
-                    const maxChars = 15000;
-                    const text = file.extractedText.length > maxChars
-                        ? file.extractedText.substring(0, maxChars) + '\n...[truncated]'
-                        : file.extractedText;
-                    fileContext += `\`\`\`\n${text}\n\`\`\`\n`;
-                } else if (file.type?.startsWith('image/')) {
-                    fileContext += `[Image attached - visible to AI]\n`;
-                } else {
-                    fileContext += `[File attached but text extraction not available]\n`;
-                }
-            }
-            fileContext += "---\n";
+        if (!sessionId) {
+            return Response.json({ error: 'Missing sessionId parameter' }, { status: 400 });
         }
 
-        // Save user message
-        await (prisma as any).chatMessage.create({
+        // 1. Verify that the session actually exists in PostgreSQL before writing messages
+        const sessionExists = await prisma.chatSession.findUnique({
+            where: { id: sessionId }
+        });
+        
+        if (!sessionExists) {
+            return Response.json({ 
+                error: `Foreign key validation failed: Session with ID ${sessionId} does not exist.` 
+            }, { status: 400 });
+        }
+
+        // 2. Commit the user content securely to PostgreSQL first
+        await prisma.chatMessage.create({
             data: {
                 sessionId,
                 role: 'user',
-                content: content + (files.length > 0 ? `\n\n[${files.length} file(s) attached]` : ""),
-                files: files.length > 0 ? files.map((f: any) => ({ name: f.name, type: f.type, size: f.size })) : undefined
+                content: content,
+                files: files.length ? files : undefined
             }
         });
 
-        // Get history for context
-        const history = await (prisma as any).chatMessage.findMany({
+        // 3. Resolve historical context (this now safely includes the user message we just created)
+        const messageHistory = await prisma.chatMessage.findMany({
             where: { sessionId },
             orderBy: { createdAt: 'asc' },
             take: 20
         });
 
-        // Prepare Gemini chat with streaming
-        const chat = genAI.chats.create({
-            model: AI_MODEL,
-            config: {
-                systemInstruction: SYSTEM_INSTRUCTION,
-            },
-            history: formatChatHistory(history.slice(0, -1)),
-        });
-
-        // Prepare parts for the current message
-        const parts: any[] = [];
-
-        // Add image files as inline data (Gemini can see these)
-        for (const file of files) {
-            if (file.type?.startsWith('image/')) {
-                parts.push({
-                    inlineData: {
-                        data: file.base64,
-                        mimeType: file.type
-                    }
-                });
-            }
-        }
-
-        // Add the user's message with file context
-        const fullPrompt = files.length > 0
-            ? `${content}${fileContext}\n\nPlease analyze the above file(s) in relation to my question.`
-            : content;
-        parts.push({ text: fullPrompt });
-
-        // Create a streaming response using Server-Sent Events
         const encoder = new TextEncoder();
-        let fullResponse = '';
-
+        
+        // 4. Initiate response generation using standard Server-Sent Events (SSE)
         const stream = new ReadableStream({
             async start(controller) {
+                let completeText = '';
                 try {
-                    const response = await chat.sendMessageStream({ message: parts });
-
-                    for await (const chunk of response) {
-                        const text = chunk.text || '';
-                        if (text) {
-                            fullResponse += text;
-                            controller.enqueue(
-                                encoder.encode(`data: ${JSON.stringify({ text, done: false })}\n\n`)
-                            );
-                        }
+                    const aiStream = await generateChatStream(content, messageHistory, files);
+                    
+                    for await (const chunk of aiStream) {
+                        completeText += chunk;
+                        controller.enqueue(
+                            encoder.encode(`data: ${JSON.stringify({ text: chunk, done: false })}\n\n`)
+                        );
                     }
 
-                    // Save the complete AI message
-                    const aiMessage = await (prisma as any).chatMessage.create({
+                    // 5. Save the final model response to the persistent ledger
+                    const aiMessage = await prisma.chatMessage.create({
                         data: {
                             sessionId,
                             role: 'model',
-                            content: fullResponse
+                            content: completeText
                         }
                     });
 
-                    // Update session timestamp
-                    await (prisma as any).chatSession.update({
+                    // 6. Bump update timestamp on the active session
+                    await prisma.chatSession.update({
                         where: { id: sessionId },
                         data: { updatedAt: new Date() }
                     });
 
-                    // Send done signal
                     controller.enqueue(
                         encoder.encode(`data: ${JSON.stringify({ done: true, messageId: aiMessage.id })}\n\n`)
                     );
                     controller.close();
-                } catch (error: any) {
-                    console.error('Streaming error:', error);
+                } catch (streamError: any) {
                     controller.enqueue(
-                        encoder.encode(`data: ${JSON.stringify({ error: error.message, done: true })}\n\n`)
+                        encoder.encode(`data: ${JSON.stringify({ error: streamError.message, done: true })}\n\n`)
                     );
                     controller.close();
                 }
@@ -138,10 +90,6 @@ export async function POST(request: NextRequest) {
             },
         });
     } catch (error: any) {
-        console.error('Chat stream error:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return Response.json({ error: error.message }, { status: 500 });
     }
 }

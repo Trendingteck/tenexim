@@ -5,17 +5,14 @@ import { useState } from 'react';
 import {
     Plus,
     Search,
-    Filter,
     Download,
     MoreHorizontal,
     ArrowRightLeft,
     Calendar,
     Building2,
-    Package,
     ChevronDown,
     Globe,
     Clock,
-    CheckCircle2,
     Settings2,
     ListFilter
 } from 'lucide-react';
@@ -40,113 +37,113 @@ export default function ShipmentsPage() {
     const [showFilters, setShowFilters] = useState(true);
 
     return (
-        <div className="space-y-6 animate-fade-in-up pb-20 max-w-[1600px] mx-auto">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="space-y-5 animate-fade-in-up pb-10 max-w-[1600px] mx-auto">
+            {/* Action Bar */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-4xl font-black text-slate-900 dark:text-white font-display tracking-tight">
-                        Global Shipments <span className="text-amber-500">Intelligence</span>
+                    <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">
+                        Global Shipments Ledger
                     </h2>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">Analyze, track and manage B2B shipment records globally.</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Filter, audit, and analyze active Bills of Lading in real time.</p>
                 </div>
-                <div className="flex items-center space-x-3">
-                    <Button variant="outline" className="rounded-xl font-bold px-6 h-12 border-slate-200 dark:border-slate-800">
-                        <Download className="w-5 h-5 mr-2" />
-                        Export Data
+                <div className="flex items-center space-x-2">
+                    <Button variant="outline" className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-4 h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Export Ledger
                     </Button>
-                    <Button variant="brand" size="xl" className="rounded-xl shadow-xl">
-                        <Plus className="w-5 h-5 mr-2" />
+                    <Button variant="brand" size="sm" className="rounded-lg font-bold text-[10px] uppercase tracking-wider h-9 bg-amber-500 text-slate-950 hover:bg-amber-600 shadow-glow">
+                        <Plus className="w-4 h-4 mr-1.5" />
                         Add Record
                     </Button>
                 </div>
             </div>
 
-            {/* Global Search Intelligence Section */}
-            <Card className="border-none shadow-2xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-amber-500/10 blur-[100px] pointer-events-none" />
-                <CardHeader>
-                    <CardTitle className="text-white flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Search className="w-5 h-5 text-amber-400" />
-                            Advanced Search Filter
+            {/* Filter Console */}
+            <Card className="border border-slate-200/60 shadow-sm bg-white overflow-hidden">
+                <CardHeader className="py-3.5 border-b border-slate-100 bg-slate-50/50">
+                    <CardTitle className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                            <Search className="w-4 h-4 text-slate-500" />
+                            Filter Parameters
                         </div>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="text-slate-400 hover:text-white"
+                            className="text-xs font-bold text-slate-500 hover:text-slate-900 h-7"
                             onClick={() => setShowFilters(!showFilters)}
                         >
-                            <ListFilter className="w-4 h-4 mr-2" />
-                            {showFilters ? 'Hide Advanced' : 'Show Advanced'}
+                            <ListFilter className="w-3.5 h-3.5 mr-1.5" />
+                            {showFilters ? 'Hide Parameters' : 'Show Parameters'}
                         </Button>
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="flex flex-col md:flex-row gap-4">
+                <CardContent className="p-4 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-3">
                         <div className="flex-[2] relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                             <Input
                                 placeholder="Search by Product Name, HS Code, or Bill of Lading..."
-                                className="h-14 pl-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 rounded-2xl focus:ring-amber-500 transition-all text-lg"
+                                className="h-10 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg text-xs font-medium focus:ring-amber-500 transition-all"
                             />
                         </div>
-                        <Button variant="brand" size="xl" className="h-14 px-10 text-lg">
-                            Analyze Market
+                        <Button variant="brand" className="h-10 px-6 text-xs bg-slate-900 text-white hover:bg-slate-800 font-bold tracking-wider uppercase">
+                            Analyze Sourcing Nodes
                         </Button>
                     </div>
 
                     {showFilters && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Operation Type</label>
-                                <div className="flex bg-slate-800/50 p-1 rounded-xl border border-slate-700">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-slate-100 animate-in fade-in slide-in-from-top-1">
+                            <div className="space-y-1">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Operation Type</label>
+                                <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                                     <button
                                         onClick={() => setFilterType('import')}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${filterType === 'import' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`flex-1 py-1 rounded text-[10px] font-bold transition-all ${filterType === 'import' ? 'bg-amber-500 text-slate-950 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-900'}`}
                                     >
                                         Import
                                     </button>
                                     <button
                                         onClick={() => setFilterType('export')}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${filterType === 'export' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`flex-1 py-1 rounded text-[10px] font-bold transition-all ${filterType === 'export' ? 'bg-amber-500 text-slate-950 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-900'}`}
                                     >
                                         Export
                                     </button>
                                     <button
                                         onClick={() => setFilterType('all')}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${filterType === 'all' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`flex-1 py-1 rounded text-[10px] font-bold transition-all ${filterType === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-900'}`}
                                     >
                                         Both
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Origin / Destination</label>
+                            <div className="space-y-1">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Origin / Destination</label>
                                 <div className="relative">
-                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                                    <select className="w-full h-11 pl-10 pr-4 bg-slate-800/50 border border-slate-700 text-white rounded-xl text-xs font-bold appearance-none focus:ring-amber-500 outline-none">
+                                    <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                                    <select className="w-full h-8 pl-8 pr-6 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold appearance-none outline-none">
                                         <option>India (Import from India)</option>
                                         <option>China</option>
                                         <option>United States</option>
                                         <option>Germany</option>
                                     </select>
-                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3 pointer-events-none" />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Date Range (From)</label>
+                            <div className="space-y-1">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Date Range (From)</label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                                    <Input type="date" className="h-11 pl-10 bg-slate-800/50 border-slate-700 text-white rounded-xl text-xs font-bold" />
+                                    <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                                    <Input type="date" className="h-8 pl-8 bg-slate-50 border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold" />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Date Range (To)</label>
+                            <div className="space-y-1">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Date Range (To)</label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                                    <Input type="date" className="h-11 pl-10 bg-slate-800/50 border-slate-700 text-white rounded-xl text-xs font-bold" />
+                                    <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                                    <Input type="date" className="h-8 pl-8 bg-slate-50 border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold" />
                                 </div>
                             </div>
                         </div>
@@ -154,87 +151,83 @@ export default function ShipmentsPage() {
                 </CardContent>
             </Card>
 
-            {/* Shipments Data Table */}
-            <Card className="border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <Badge variant="outline" className="py-1 px-3 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+            {/* Shipment Grid Plate */}
+            <Card className="border border-slate-200/60 overflow-hidden shadow-sm bg-white">
+                <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50">
+                    <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="py-0.5 px-2 bg-white border-slate-200 text-slate-600 text-[9px] font-black uppercase">
                             128,492 Records Found
                         </Badge>
-                        <div className="flex items-center gap-1 text-xs text-slate-400 font-medium">
+                        <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold">
                             <Clock className="w-3.5 h-3.5" />
-                            Updated 2 mins ago
+                            Sync active
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="rounded-xl gap-2 font-bold dark:border-slate-800">
-                            <Settings2 className="w-4 h-4" />
-                            Customize Columns
-                        </Button>
-                    </div>
+                    <Button variant="outline" size="sm" className="rounded-lg gap-1.5 font-bold text-[10px] h-8 border-slate-200">
+                        <Settings2 className="w-3.5 h-3.5" />
+                        Modify Grid Schema
+                    </Button>
                 </div>
-                <Table>
-                    <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                <Table className="font-mono text-[10px]">
+                    <TableHeader className="bg-slate-50">
                         <TableRow>
-                            <TableHead className="w-[150px] font-black text-[10px] uppercase tracking-wider pl-6">Shipment ID</TableHead>
-                            <TableHead className="font-black text-[10px] uppercase tracking-wider">Product Description</TableHead>
-                            <TableHead className="font-black text-[10px] uppercase tracking-wider">Shipper / Consignee</TableHead>
-                            <TableHead className="font-black text-[10px] uppercase tracking-wider">Route</TableHead>
-                            <TableHead className="font-black text-[10px] uppercase tracking-wider">Total Value</TableHead>
-                            <TableHead className="font-black text-[10px] uppercase tracking-wider">Status</TableHead>
-                            <TableHead className="text-right pr-6 font-black text-[10px] uppercase tracking-wider">Actions</TableHead>
+                            <TableHead className="w-[120px] font-black text-[8px] uppercase tracking-wider pl-4">Manifest ID</TableHead>
+                            <TableHead className="font-black text-[8px] uppercase tracking-wider">Product Class</TableHead>
+                            <TableHead className="font-black text-[8px] uppercase tracking-wider">Shipper / Consignee</TableHead>
+                            <TableHead className="font-black text-[8px] uppercase tracking-wider text-center">Route Vectors</TableHead>
+                            <TableHead className="font-black text-[8px] uppercase tracking-wider">Declared Value</TableHead>
+                            <TableHead className="font-black text-[8px] uppercase tracking-wider">Audit Exclusion</TableHead>
+                            <TableHead className="text-right pr-4 font-black text-[8px] uppercase tracking-wider">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                            <TableRow key={i} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <TableCell className="font-bold text-slate-900 dark:text-white pl-6">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
+                                <TableCell className="font-bold text-slate-900 pl-4">
                                     #TNX-{828394 + i}
                                 </TableCell>
-                                <TableCell className="max-w-[300px]">
-                                    <div className="font-bold text-slate-900 dark:text-white truncate">5G Core Infrastructure Equipment</div>
-                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">HS CODE: 851762</div>
+                                <TableCell className="max-w-[250px]">
+                                    <div className="font-bold text-slate-900 truncate">5G Core Infrastructure Components</div>
+                                    <div className="text-[8px] font-black text-slate-400 mt-0.5 uppercase">HS CODE: 851762</div>
                                 </TableCell>
                                 <TableCell>
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
-                                            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                    <div className="flex flex-col gap-0.5">
+                                        <div className="flex items-center gap-1 font-bold text-slate-700">
+                                            <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
                                             Tata Communications Ltd
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                                            <ArrowRightLeft className="w-3 h-3" />
+                                        <div className="flex items-center gap-1 text-[9px] text-slate-400">
+                                            <ArrowRightLeft className="w-3 h-3 shrink-0" />
                                             Verizon Network Systems
                                         </div>
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center gap-2">
                                         <div className="flex flex-col items-center">
-                                            <span className="text-[10px] font-black text-slate-900 dark:text-white">INMAA</span>
+                                            <span className="text-[9px] font-black text-slate-900">INMAA</span>
                                             <span className="text-[8px] text-slate-400 uppercase">Chennai</span>
                                         </div>
-                                        <ArrowRightLeft className="w-4 h-4 text-amber-500" />
+                                        <ArrowRightLeft className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                                         <div className="flex flex-col items-center">
-                                            <span className="text-[10px] font-black text-slate-900 dark:text-white">USLAX</span>
+                                            <span className="text-[9px] font-black text-slate-900">USLAX</span>
                                             <span className="text-[8px] text-slate-400 uppercase">Los Angeles</span>
                                         </div>
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <div className="font-black text-slate-900 dark:text-white text-base">$452,000.00</div>
-                                    <div className="text-[10px] text-slate-400 font-bold uppercase">USD</div>
+                                    <div className="font-black text-slate-900 text-xs">$452,000</div>
+                                    <div className="text-[8px] text-slate-400 font-bold uppercase">USD</div>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={i % 3 === 0 ? "success" : "warning"} className="rounded-full px-4 border-none shadow-sm">
-                                        {i % 3 === 0 ? "Confirmed" : "In Transit"}
-                                    </Badge>
+                                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[8px] font-black border ${i % 3 === 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+                                        {i % 3 === 0 ? "CONFIRMED" : "IN TRANSIT"}
+                                    </span>
                                 </TableCell>
-                                <TableCell className="text-right pr-6">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9">
-                                            <MoreHorizontal className="w-5 h-5 text-slate-400" />
-                                        </Button>
-                                    </div>
+                                <TableCell className="text-right pr-4">
+                                    <Button variant="ghost" size="icon" className="rounded h-8 w-8">
+                                        <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -242,20 +235,16 @@ export default function ShipmentsPage() {
                 </Table>
             </Card>
 
-            {/* Custom Pagination */}
-            <div className="flex items-center justify-between px-2">
-                <div className="text-sm text-slate-500 font-medium">
-                    Showing <span className="text-slate-900 dark:text-white font-bold">1 to 20</span> of 128,492 entries
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between px-2 text-[10px]">
+                <div className="text-slate-500 font-bold uppercase tracking-wider">
+                    Showing <span className="text-slate-900 font-black">1 to 5</span> of 128,492 entries
                 </div>
-                <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <Button variant="ghost" className="h-10 px-4 rounded-xl font-bold" disabled>Previous</Button>
-                    <div className="flex space-x-1">
-                        <Button variant="brand" className="h-10 w-10 rounded-xl font-bold text-sm">1</Button>
-                        <Button variant="ghost" className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-sm">2</Button>
-                        <Button variant="ghost" className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-sm">3</Button>
-                        <Button variant="ghost" className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-sm">4</Button>
-                    </div>
-                    <Button variant="ghost" className="h-10 px-4 rounded-xl font-bold">Next</Button>
+                <div className="flex items-center space-x-1.5 bg-white p-1 rounded-lg border border-slate-200/60 shadow-sm">
+                    <Button variant="ghost" className="h-8 px-3 rounded font-bold uppercase text-[9px] tracking-wider" disabled>Previous</Button>
+                    <Button variant="brand" className="h-7 w-7 rounded bg-amber-500 text-slate-950 font-black text-[10px]">1</Button>
+                    <Button variant="ghost" className="h-7 w-7 rounded text-slate-600 hover:bg-slate-100 font-bold text-[10px]">2</Button>
+                    <Button variant="ghost" className="h-8 px-3 rounded font-bold uppercase text-[9px] tracking-wider">Next</Button>
                 </div>
             </div>
         </div>
