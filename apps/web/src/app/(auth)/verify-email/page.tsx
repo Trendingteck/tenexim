@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyEmailAction } from '@/actions/auth';
 import { Globe, Loader2, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
@@ -116,5 +116,39 @@ export default function VerifyEmailPage() {
                 TENEXIM OS • DECRYPT ACCESS STABILITY GUARANTEE
             </div>
         </div>
+    );
+}
+
+export default function VerifyEmailPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between p-8 sm:p-12 lg:p-16 font-sans relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid-light dark:bg-grid-dark opacity-10 pointer-events-none"></div>
+                <div className="flex items-center gap-3 z-10 self-start">
+                    <div className="w-9 h-9 bg-slate-900 dark:bg-amber-500 rounded flex items-center justify-center shadow-md">
+                        <Globe className="w-5.5 h-5.5 text-white dark:text-slate-950" />
+                    </div>
+                    <div>
+                        <span className="block text-sm font-black tracking-tight text-slate-900 dark:text-white leading-none">TENEXIM</span>
+                        <span className="block text-[8px] font-bold tracking-widest uppercase text-amber-600 dark:text-amber-400 mt-0.5">Sovereign OS</span>
+                    </div>
+                </div>
+                <div className="w-full max-w-sm mx-auto my-auto py-12 text-center space-y-6 z-10">
+                    <div className="space-y-4">
+                        <div className="w-14 h-14 mx-auto bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center shadow-sm">
+                            <Loader2 className="w-6 h-6 text-amber-600 dark:text-amber-400 animate-spin" />
+                        </div>
+                        <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                            Initializing Handshake...
+                        </h1>
+                    </div>
+                </div>
+                <div className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">
+                    TENEXIM OS • DECRYPT ACCESS STABILITY GUARANTEE
+                </div>
+            </div>
+        }>
+            <VerifyEmailForm />
+        </Suspense>
     );
 }
