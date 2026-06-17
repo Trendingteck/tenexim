@@ -65,3 +65,9 @@ desktop.ini
 # Private Local Script Files (TENEXIM Specific)
 watcher.py
 TENEXIM.txt
+
+# Large Trade Datasets (GitHub 100MB Limit Block)
+*.csv
+*.xlsx
+*.parquet
+packages/database/data/
