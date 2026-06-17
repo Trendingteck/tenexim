@@ -1,7 +1,7 @@
-import { createClient, type Client } from '@clickhouse/client';
+import { createClient, type ClickHouseClient } from '@clickhouse/client';
 
 const globalForClickHouse = global as unknown as {
-  clickhouse: Client | undefined;
+  clickhouse: ClickHouseClient | undefined;
 };
 
 export const clickhouse = globalForClickHouse.clickhouse || createClient({
