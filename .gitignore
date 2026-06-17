@@ -36,6 +36,7 @@ build/
 *.db-journal
 *.sqlite
 clickhouse_data/
+packages/database/scripts/
 
 # Deployment & Serverless Platforms
 .vercel
