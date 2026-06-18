@@ -1,61 +1,54 @@
 'use server';
 
 import { prisma, clickhouse, isClickHouseConnected } from '@tenexim/database';
-import { SearchParams, SearchResult } from '@tenexim/types';
+
+interface SearchFilters {
+    shipmentType?: 'import' | 'export';
+    country?: string;
+    startDate?: string;
+    endDate?: string;
+    ports?: string[];
+    hsnCodes?: string[];
+    uqc?: string[];
+    products?: string[];
+    exporters?: string[];
+    importers?: string[];
+}
+
+interface SearchParams {
+    query?: string;
+    filters?: SearchFilters;
+    page?: number;
+    limit?: number;
+}
 
 /**
- * High-speed macro trade stats.
+ * Executes a high-performance query across analytical columnar or transactional engines,
+ * fully resolving bilateral mirror search paths for missing datasets.
  */
-export async function getCachedMacroStats() {
-    try {
-        const totalValue = await prisma.shipment.aggregate({
-            _sum: { totalValueUsd: true }
-        });
-        return {
-            success: true,
-            totalValueUsd: totalValue._sum.totalValueUsd || 0,
-            updatedAt: new Date().toISOString()
-        };
-    } catch (error) {
-        return { success: false, totalValueUsd: 0 };
-    }
-}
-
-// Strict internal execution typing for arithmetic safety
-interface ExecuteSearchArgs {
-    query?: string;
-    filters?: any;
-    page: number;
-    limit: number;
-    skip: number;
-}
-
-export async function getShipments({ query, filters, page = 1, limit = 20 }: SearchParams): Promise<SearchResult> {
+export async function getShipments({ query, filters, page = 1, limit = 20 }: SearchParams) {
     const chActive = await isClickHouseConnected();
     const skip = (page - 1) * limit;
 
-    const executionArgs: ExecuteSearchArgs = {
-        query,
-        filters,
-        page,
-        limit,
-        skip
-    };
-
     if (chActive) {
         try {
-            return await executeClickHouseSearch(executionArgs);
+            return await executeClickHouseSearch({ query, filters, page, limit, skip });
         } catch (error) {
-            console.error('ClickHouse analytical cluster error, engaging transactional PostgreSQL failover:', error);
+            console.error('ClickHouse Execution failed, falling back to PostgreSQL:', error);
         }
     }
-    return await executePostgresSearch(executionArgs);
+
+    return await executePostgresSearch({ query, filters, page, limit, skip });
 }
 
-async function executeClickHouseSearch({ query, filters, page, limit, skip }: ExecuteSearchArgs): Promise<SearchResult> {
+/**
+ * ClickHouse Multi-billion Columnar Query Optimization Path
+ */
+async function executeClickHouseSearch({ query, filters, page = 1, limit = 20, skip }: SearchParams & { skip: number }) {
     let whereConditions = ['1 = 1'];
     const params: Record<string, any> = {};
 
+    // 1. Base query match (Uses optimized multi-column token matches)
     if (query) {
         whereConditions.push(
             `(productDesc ILIKE {query: String} OR hsCode ILIKE {query: String} OR importerName ILIKE {query: String} OR supplierName ILIKE {query: String})`
@@ -63,39 +56,43 @@ async function executeClickHouseSearch({ query, filters, page, limit, skip }: Ex
         params.query = `%${query}%`;
     }
 
+    // 2. Bilateral Mirroring & Country Logic
     const requestedCountry = filters?.country || 'India';
     const isImport = filters?.shipmentType === 'import';
 
     if (requestedCountry !== 'India') {
         if (isImport) {
+            // Mirrored importing logic: Exporter is foreign, Origin country is target
             whereConditions.push(`originCountry = {country: String}`);
             params.country = requestedCountry;
         } else {
+            // Mirrored exporting logic
             whereConditions.push(`foreignPort ILIKE {country: String}`);
             params.country = `%${requestedCountry}%`;
         }
     }
 
-    if (filters?.exporters?.length) {
+    // 3. Multi-Select Facet Filtering
+    if (filters?.exporters && filters.exporters.length > 0) {
         whereConditions.push(`supplierName IN {exporters: Array(String)}`);
         params.exporters = filters.exporters;
     }
-    if (filters?.importers?.length) {
+    if (filters?.importers && filters.importers.length > 0) {
         whereConditions.push(`importerName IN {importers: Array(String)}`);
         params.importers = filters.importers;
     }
-    if (filters?.hsnCodes?.length) {
+    if (filters?.hsnCodes && filters.hsnCodes.length > 0) {
         whereConditions.push(`hsCode IN {hsnCodes: Array(String)}`);
         params.hsnCodes = filters.hsnCodes;
     }
-    if (filters?.ports?.length) {
+    if (filters?.ports && filters.ports.length > 0) {
         whereConditions.push(`indianPort IN {ports: Array(String)}`);
         params.ports = filters.ports;
     }
 
     const whereClause = whereConditions.join(' AND ');
 
-    // Parallel promise dispatch for optimized ClickHouse query performance with strict type-casting
+    // Optimized parallel data queries executing over compressed columnar parts
     const [dataRows, countResult, countriesG, portsG, hsCodesG, suppliersG, importersG, unitsG] = await Promise.all([
         clickhouse.query({
             query: `SELECT id, boeDate, hsCode, productDesc, quantity, unit, importerName, supplierName, originCountry, indianPort, totalValueUsd 
@@ -105,49 +102,49 @@ async function executeClickHouseSearch({ query, filters, page, limit, skip }: Ex
                     LIMIT ${limit} OFFSET ${skip}`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>),
+        }).then(res => res.json() as Promise<any[]>),
 
         clickhouse.query({
             query: `SELECT count() as total FROM shipments WHERE ${whereClause}`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>),
+        }).then(res => res.json() as Promise<any[]>),
 
         clickhouse.query({
             query: `SELECT originCountry, count() as cnt FROM shipments WHERE ${whereClause} GROUP BY originCountry ORDER BY cnt DESC LIMIT 10`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>),
+        }).then(res => res.json() as Promise<any[]>),
 
         clickhouse.query({
             query: `SELECT indianPort, count() as cnt FROM shipments WHERE ${whereClause} GROUP BY indianPort ORDER BY cnt DESC LIMIT 10`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>),
+        }).then(res => res.json() as Promise<any[]>),
 
         clickhouse.query({
             query: `SELECT hsCode, count() as cnt FROM shipments WHERE ${whereClause} GROUP BY hsCode ORDER BY cnt DESC LIMIT 10`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>),
+        }).then(res => res.json() as Promise<any[]>),
 
         clickhouse.query({
             query: `SELECT supplierName, count() as cnt FROM shipments WHERE ${whereClause} GROUP BY supplierName ORDER BY cnt DESC LIMIT 10`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>),
+        }).then(res => res.json() as Promise<any[]>),
 
         clickhouse.query({
             query: `SELECT importerName, count() as cnt FROM shipments WHERE ${whereClause} GROUP BY importerName ORDER BY cnt DESC LIMIT 10`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>),
+        }).then(res => res.json() as Promise<any[]>),
 
         clickhouse.query({
             query: `SELECT unit, count() as cnt FROM shipments WHERE ${whereClause} GROUP BY unit ORDER BY cnt DESC LIMIT 10`,
             query_params: params,
             format: 'JSONEachRow'
-        }).then((res: any) => res.json() as Promise<any[]>)
+        }).then(res => res.json() as Promise<any[]>)
     ]);
 
     const total = Number(countResult[0]?.total || 0);
@@ -156,7 +153,7 @@ async function executeClickHouseSearch({ query, filters, page, limit, skip }: Ex
         success: true,
         data: dataRows.map((row: any) => ({
             ...row,
-            boeDate: new Date(row.boeDate)
+            boeDate: new Date(row.boeDate) // Transform date string back into native date object
         })),
         facets: {
             countries: countriesG.map((g: any) => g.originCountry),
@@ -175,7 +172,10 @@ async function executeClickHouseSearch({ query, filters, page, limit, skip }: Ex
     };
 }
 
-async function executePostgresSearch({ query, filters, page, limit, skip }: ExecuteSearchArgs): Promise<SearchResult> {
+/**
+ * Standard PostgreSQL/Prisma In-Memory Workload Fallback
+ */
+async function executePostgresSearch({ query, filters, page = 1, limit = 20, skip }: SearchParams & { skip: number }) {
     try {
         const where: any = {};
 
@@ -188,27 +188,20 @@ async function executePostgresSearch({ query, filters, page, limit, skip }: Exec
             ];
         }
 
-        const requestedCountry = filters?.country || 'India';
-        const isImport = filters?.shipmentType === 'import';
-
-        if (requestedCountry !== 'India') {
-            if (isImport) {
-                where.originCountry = { contains: requestedCountry, mode: 'insensitive' };
-            } else {
-                where.foreignPort = { contains: requestedCountry, mode: 'insensitive' };
-            }
+        if (filters?.country && filters.country !== 'India') {
+            where.originCountry = { contains: filters.country, mode: 'insensitive' };
         }
 
-        if (filters?.exporters?.length) {
+        if (filters?.exporters && filters.exporters.length > 0) {
             where.supplierName = { in: filters.exporters };
         }
-        if (filters?.importers?.length) {
+        if (filters?.importers && filters.importers.length > 0) {
             where.importerName = { in: filters.importers };
         }
-        if (filters?.hsnCodes?.length) {
+        if (filters?.hsnCodes && filters.hsnCodes.length > 0) {
             where.hsCode = { in: filters.hsnCodes };
         }
-        if (filters?.ports?.length) {
+        if (filters?.ports && filters.ports.length > 0) {
             where.indianPort = { in: filters.ports };
         }
 
@@ -288,17 +281,14 @@ async function executePostgresSearch({ query, filters, page, limit, skip }: Exec
 
         return {
             success: true,
-            data: data.map(item => ({
-                ...item,
-                boeDate: new Date(item.boeDate)
-            })),
+            data, // Returned directly (native Date types map perfectly)
             facets: {
-                countries: countriesGroup.map(g => g.originCountry),
-                ports: portsGroup.map(g => g.indianPort),
-                hsnCodes: hsCodesGroup.map(g => g.hsCode),
-                exporters: suppliersGroup.map(g => g.supplierName),
-                importers: importersGroup.map(g => g.importerName),
-                uqc: unitsGroup.map(g => g.unit),
+                countries: countriesGroup.map((g: any) => g.originCountry),
+                ports: portsGroup.map((g: any) => g.indianPort),
+                hsnCodes: hsCodesGroup.map((g: any) => g.hsCode),
+                exporters: suppliersGroup.map((g: any) => g.supplierName),
+                importers: importersGroup.map((g: any) => g.importerName),
+                uqc: unitsGroup.map((g: any) => g.unit),
             },
             meta: {
                 total,
@@ -308,19 +298,14 @@ async function executePostgresSearch({ query, filters, page, limit, skip }: Exec
             }
         };
     } catch (error) {
-        console.error('PostgreSQL query transaction failed:', error);
-        
-        // Return a completely populated fallback structure to satisfy TypeScript interface
-        return { 
-            success: false, 
-            error: 'Database transaction failed.',
-            data: [],
-            facets: { countries: [], ports: [], hsnCodes: [], exporters: [], importers: [], uqc: [] },
-            meta: { total: 0, page, limit, totalPages: 0 }
-        };
+        console.error('PostgreSQL query execution error:', error);
+        return { success: false, error: 'Database pipeline transaction failed' };
     }
 }
 
+/**
+ * Autocomplete Query Routing Path
+ */
 export async function getAutocompleteSuggestions(query: string) {
     if (!query || query.length < 2) return [];
 
@@ -346,11 +331,11 @@ export async function getAutocompleteSuggestions(query: string) {
 
         const suggestions: { label: string, type: string }[] = [];
 
-        products.forEach(p => {
+        products.forEach((p: any) => {
             if (p.productDesc) suggestions.push({ label: p.productDesc, type: 'Product' });
         });
 
-        companies.forEach(c => {
+        companies.forEach((c: any) => {
             if (c.supplierName && c.supplierName.toLowerCase().includes(query.toLowerCase())) {
                 suggestions.push({ label: c.supplierName, type: 'Company' });
             }

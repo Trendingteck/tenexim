@@ -7,13 +7,14 @@
         "packages/*"
     ],
     "scripts": {
-        "dev": "turbo run dev",
-        "build": "turbo run build",
-        "lint": "turbo run lint",
-        "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-        "dashboard": "mprocs",
-        "clean": "rimraf --glob \"**/.next\" \"**/.turbo\" \"**/.cache\" \"**/dist\" \"**/build\"",
-        "clean:deep": "rimraf --glob \"**/.next\" \"**/.turbo\" \"**/.cache\" \"**/dist\" \"**/node_modules\" \"pnpm-lock.yaml\""
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "verify-build": "pnpm build && pnpm lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "dashboard": "mprocs",
+    "clean": "rimraf --glob \"**/.next\" \"**/.turbo\" \"**/.cache\" \"**/dist\" \"**/build\"",
+    "clean:deep": "rimraf --glob \"**/.next\" \"**/.turbo\" \"**/.cache\" \"**/dist\" \"**/node_modules\" \"pnpm-lock.yaml\""
     },
     "devDependencies": {
         "@types/node": "^22.0.0",
