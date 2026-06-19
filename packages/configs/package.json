@@ -3,9 +3,10 @@
     "version": "0.0.0",
     "private": true,
     "license": "MIT",
+    "type": "module",
     "exports": {
         "./eslint/nextjs": {
-            "default": "./eslint/nextjs.js"
+            "default": "./eslint/nextjs.cjs"
         },
         "./tailwind": {
             "import": "./tailwind/index.ts",
