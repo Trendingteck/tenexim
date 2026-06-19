@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./crypto": "./src/crypto.ts",
-    "./session": "./src/session.ts"
+    "./session": "./src/session.ts",
+    "./src/*": "./src/*"
   },
   "dependencies": {},
   "devDependencies": {
