@@ -6,7 +6,7 @@ const project = resolve(process.cwd(), "tsconfig.json");
 module.exports = {
     extends: [
         "eslint:recommended",
-        "next/core-web-vitals",
+        "plugin:@typescript-eslint/recommended",
         "prettier",
     ],
     parser: "@typescript-eslint/parser",
@@ -15,8 +15,8 @@ module.exports = {
         sourceType: "module",
     },
     globals: {
-        React: true,
-        JSX: true,
+        React: "readonly",
+        JSX: "readonly",
     },
     env: {
         node: true,
@@ -33,18 +33,13 @@ module.exports = {
         // Ignore dotfiles
         ".*.js",
         "node_modules/",
+        ".next/",
+        "dist/"
     ],
     plugins: ["@typescript-eslint", "only-warn"],
     rules: {
         "import/no-default-export": "off",
-        "no-unused-vars": [
-            "warn",
-            {
-                argsIgnorePattern: "^_",
-                varsIgnorePattern: "^_",
-                caughtErrorsIgnorePattern: "^_",
-            },
-        ],
+        "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": [
             "warn",
             {

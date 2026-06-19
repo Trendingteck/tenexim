@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, Suspense } from 'react';
 import {
     Sparkles,
     ChevronLeft,
@@ -28,7 +28,7 @@ import ImageLightbox from '@/components/copilot/ImageLightbox';
 import { useCopilot, Message } from '@/hooks/copilot/useCopilot';
 import { Button } from '@tenexim/ui';
 
-export default function CopilotPage() {
+function CopilotContent() {
     const {
         messages,
         sessions,
@@ -464,5 +464,20 @@ function MenuButton({ icon, label, onClick, danger }: { icon: React.ReactNode, l
             {icon}
             {label}
         </button>
+    );
+}
+
+export default function CopilotPage() {
+    return (
+        <Suspense fallback={
+            <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-10 h-10 animate-spin text-amber-500" />
+                    <span className="text-xs font-black text-slate-500 uppercase tracking-widest animate-pulse">Initializing Copilot Node...</span>
+                </div>
+            </div>
+        }>
+            <CopilotContent />
+        </Suspense>
     );
 }
