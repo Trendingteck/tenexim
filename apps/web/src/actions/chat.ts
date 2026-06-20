@@ -1,10 +1,9 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { prisma, getOrCreateUser } from '@/lib/chat';
 
 // =============================================================================
-// CHAT SESSION CRUD OPERATIONS (Server Actions)
+// CHAT SESSION CRUD OPERATIONS (Server Actions with High-Speed Client sync)
 // =============================================================================
 
 export async function getChatSessions() {
@@ -40,7 +39,6 @@ export async function createChatSession(title: string = 'New Chat') {
                 userId: user.id,
             }
         });
-        revalidatePath('/dashboard/copilot');
         return { success: true, session };
     } catch (error) {
         console.error('Error creating chat session:', error);
@@ -73,7 +71,6 @@ export async function deleteChatSession(sessionId: string) {
         await (prisma as any).chatSession.deleteMany({
             where: { id: sessionId }
         });
-        revalidatePath('/dashboard/copilot');
         return { success: true };
     } catch (error) {
         console.error('Error deleting session:', error);
@@ -87,7 +84,6 @@ export async function renameChatSession(sessionId: string, title: string) {
             where: { id: sessionId },
             data: { title }
         });
-        revalidatePath('/dashboard/copilot');
         return { success: true };
     } catch (error) {
         console.error('Error renaming session:', error);
@@ -101,7 +97,6 @@ export async function togglePinSession(sessionId: string, isPinned: boolean) {
             where: { id: sessionId },
             data: { isPinned }
         });
-        revalidatePath('/dashboard/copilot');
         return { success: true };
     } catch (error) {
         console.error('Error pinning session:', error);

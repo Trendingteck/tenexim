@@ -50,20 +50,16 @@ export const validateFiles = (files: File[]): File[] => {
 
 export function useCopilot() {
     const searchParams = useSearchParams();
-    const router = useRouter();
     const urlId = searchParams.get('id');
 
     const [sessions, setSessions] = useState<any[]>([]);
-    const [currentSessionId, setCurrentSessionId] = useState<string | null>(urlId);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isThinking, setIsThinking] = useState(false);
     const [streamingContent, setStreamingContent] = useState('');
-    const [isLoadingMessages, setIsLoadingMessages] = useState(!!urlId);
-
-    // Dynamic right side file preview panel state
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [activeFile, setActiveFile] = useState<any | null>(null);
 
-    // Track loaded session ID to prevent redundant loading transitions
     const loadedSessionIdRef = useRef<string | null>(null);
 
     const fetchSessions = useCallback(async () => {
@@ -82,8 +78,6 @@ export function useCopilot() {
     }, [fetchSessions]);
 
     const loadMessages = useCallback(async (sessionId: string) => {
-        if (loadedSessionIdRef.current === sessionId) return;
-        
         setIsLoadingMessages(true);
         setMessages([]);
         setStreamingContent('');
@@ -106,10 +100,13 @@ export function useCopilot() {
         }
     }, []);
 
+    // Initial mount or browser Back/Forward synchronization only
     useEffect(() => {
         if (urlId) {
-            setCurrentSessionId(urlId);
-            loadMessages(urlId);
+            if (urlId !== currentSessionId) {
+                setCurrentSessionId(urlId);
+                loadMessages(urlId);
+            }
         } else {
             setCurrentSessionId(null);
             setMessages([]);
@@ -118,51 +115,93 @@ export function useCopilot() {
             setIsLoadingMessages(false);
             setActiveFile(null);
         }
-    }, [urlId, loadMessages]);
+    }, [urlId]);
 
+    // snappy session selection: Updates instantly in React state & address bar silently
     const selectSession = useCallback((sessionId: string) => {
-        router.replace(`/dashboard/copilot?id=${sessionId}`);
-    }, [router]);
+        setCurrentSessionId(sessionId);
+        loadMessages(sessionId);
+        
+        // Silently update standard browser history without triggering layout rebuilds
+        const newUrl = `${window.location.pathname}?id=${sessionId}`;
+        window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+    }, [loadMessages]);
 
     const createNewChat = useCallback(() => {
-        router.replace('/dashboard/copilot');
-    }, [router]);
+        setCurrentSessionId(null);
+        setMessages([]);
+        setStreamingContent('');
+        loadedSessionIdRef.current = null;
+        setActiveFile(null);
+        
+        // Silently clear query parameter without unmounting
+        const newUrl = window.location.pathname;
+        window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+    }, []);
 
+    // Snap-action deletion with automatic error rollback
     const removeSession = useCallback(async (sessionId: string) => {
+        const originalSessions = [...sessions];
+
+        // Optimistically remove the chat from the UI list instantly
+        setSessions(prev => prev.filter(s => s.id !== sessionId));
+        if (currentSessionId === sessionId) {
+            createNewChat();
+        }
+
         try {
             const res = await deleteChatSession(sessionId);
-            if (res.success) {
-                if (currentSessionId === sessionId) {
-                    createNewChat();
-                }
-                await fetchSessions();
+            if (!res.success) {
+                // Rollback if DB transaction rejected
+                setSessions(originalSessions);
             }
         } catch (error) {
             console.error('Error deleting chat session:', error);
+            setSessions(originalSessions);
         }
-    }, [currentSessionId, createNewChat, fetchSessions]);
+    }, [currentSessionId, createNewChat, sessions]);
 
+    // Snap-action renaming with automatic error rollback
     const renameSession = useCallback(async (sessionId: string, title: string) => {
+        const originalSessions = [...sessions];
+
+        // Optimistically change the title instantly in UI list
+        setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title } : s));
+
         try {
             const res = await renameChatSession(sessionId, title);
-            if (res.success) {
-                await fetchSessions();
+            if (!res.success) {
+                setSessions(originalSessions);
             }
         } catch (error) {
             console.error('Error renaming chat session:', error);
+            setSessions(originalSessions);
         }
-    }, [fetchSessions]);
+    }, [sessions]);
 
+    // Snap-action pinning & auto-sorting with error rollback
     const pinSession = useCallback(async (sessionId: string, isPinned: boolean) => {
+        const originalSessions = [...sessions];
+
+        // Optimistically update pinned status and instantly sort the UI sidebar list
+        setSessions(prev => {
+            const updated = prev.map(s => s.id === sessionId ? { ...s, isPinned } : s);
+            return updated.sort((a, b) => {
+                if (a.isPinned !== b.isPinned) return b.isPinned ? 1 : -1;
+                return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            });
+        });
+
         try {
             const res = await togglePinSession(sessionId, isPinned);
-            if (res.success) {
-                await fetchSessions();
+            if (!res.success) {
+                setSessions(originalSessions);
             }
         } catch (error) {
             console.error('Error toggling pin status:', error);
+            setSessions(originalSessions);
         }
-    }, [fetchSessions]);
+    }, [sessions]);
 
     const clearChat = useCallback(async () => {
         if (!currentSessionId) return;
@@ -214,7 +253,6 @@ export function useCopilot() {
                 }
             } else if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.type === 'text/csv' || file.name.endsWith('.csv')) {
                 try {
-                    // Extract text contents to save in context database
                     const text = await new Promise<string>((resolve, reject) => {
                         const r = new FileReader();
                         r.onload = () => resolve(r.result as string);
@@ -242,10 +280,19 @@ export function useCopilot() {
         setIsThinking(true);
         setStreamingContent('');
 
+        // 1. Instant User Message Render (0ms perceived lag)
+        const processedFiles = await processFiles(rawFiles);
+        const userMsg: Message = {
+            role: 'user',
+            content,
+            files: processedFiles
+        };
+        setMessages(prev => [...prev, userMsg]);
+
         try {
-            const processedFiles = await processFiles(rawFiles);
             let sessionId = currentSessionId;
 
+            // 2. Resolve database session lazily in the background
             if (!sessionId) {
                 const title = content.trim().slice(0, 35) || 'New Chat';
                 const res = await createChatSession(title);
@@ -253,20 +300,19 @@ export function useCopilot() {
                     sessionId = res.session.id;
                     loadedSessionIdRef.current = sessionId;
                     setCurrentSessionId(sessionId);
-                    router.replace(`/dashboard/copilot?id=${sessionId}`);
-                    await fetchSessions();
+                    
+                    // Update URL silently without unmounting or triggering layout Suspense
+                    const newUrl = `${window.location.pathname}?id=${sessionId}`;
+                    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+                    
+                    // Asynchronously load sidebar lists without blocking user input
+                    fetchSessions();
                 } else {
                     throw new Error(res.error || 'Could not instantiate database session context');
                 }
             }
 
-            const userMsg: Message = {
-                role: 'user',
-                content,
-                files: processedFiles
-            };
-            setMessages(prev => [...prev, userMsg]);
-
+            // 3. Initiate event-driven response stream
             const response = await fetch('/api/chat/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -323,7 +369,8 @@ export function useCopilot() {
                 }
             }
 
-            await fetchSessions();
+            // Background update to sync title changes
+            fetchSessions();
 
         } catch (error) {
             console.error('Stream processing encountered an exception:', error);
